@@ -176,7 +176,7 @@ These are three capabilities HQ tested on 2026-10-18 (v0.5.1), inspired by the "
     - match saturation and colour;
     - dissolve 3 frames at each seam.
 
-    The seams then measured 0.012 and 0.011, against the camera's 0.009 frame step. The scratch tools that did this are `projects/_hqtest/tools/gap_fill_splice.py` and `gap_fill_compare.py`; `scripts/gap_fill.py` is in the v0.12 backlog.
+    The seams then measured 0.012 and 0.011, against the camera's 0.009 frame step. The scratch tools that did this are `projects/_hqtest/tools/gap_fill_splice.py` and `gap_fill_compare.py`; `scripts/gap_fill.py` is in the v0.14 tools backlog.
   - **Omni always returns sound** (AAC; OpenRouter refuses `generate_audio: false` with a 400 that isn't charged). `gen_video.py` asks for it, and `conform_clip.py` strips it.
   - Neither model landed exactly on its last still. **Never cut straight from a gap-fill's last frame into the real shot**: cut at the frame closest to the still, or dissolve 2–4 frames.
 - OpenRouter's video generation isn't eligible for zero data retention: providers keep outputs briefly.

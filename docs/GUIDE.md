@@ -38,13 +38,13 @@ Cinematic Reels Studio turns your own clips into a finished, cinematic **9:16 In
 - **You are the director.** You shoot, hand over clips, answer short multiple-choice questions, share references, and approve or give notes.
 - **Claude is the editor.** It writes the brief, the cut plan and the treatment, builds the reel in Premiere, checks it, and exports it. It never makes a creative call you'd want to make without showing it to you first.
 
-**It never just cuts and stitches.** Every reel gets:
+**It never just cuts and stitches, and never over-treats.** Every reel gets:
 - colour correction and shot matching for each clip, **camera-true by default** (the picture stays as close as possible to what the camera recorded);
-- a creative look and film texture only if you pick them;
-- motion on the hero shots (pushes, punch-ins);
-- planned effects and transitions;
 - type and graphics;
-- sound design.
+- sound design;
+- a creative look, film texture and designed moves (slow motion, ramps, step-prints, zooms, wipes, flashes) **only if you pick them** on the brief's effect list.
+
+**Restraint is the default (v0.12).** Footage plays at real speed, cuts are hard, and the camera is still or steady. A 2026-11-15 study of the director's saved reference reels against the studio's posted reels found the references plain, calm and clean. The studio's treated reels read as glitchy, flickery and grainy. Most of that came from synthetic slow motion, crops on noisy night footage, stacked processing, and footage shot at 1/60 s under mains lamps (`studio/reviews/quality-diagnosis-2026-11-15.md`).
 
 ### Reel types
 Each reel has a **type**, which decides what drives the timing:
@@ -205,8 +205,10 @@ HQ then accepts it (and versions the change), defers it to `BACKLOG.md`, or reje
 
 The one-page camera guide is `studio/shooting-guide-blackmagic-cam.md` (PDF: `docs/shooting-guide.pdf`). It was built from 329 measured festival-night clips shot with Blackmagic Cam on an iPhone. The short version:
 
-- **25 fps at a 1/50 s shutter**, all night. One frame rate means no conforming, and 1/50 s doesn't flicker under India's 50 Hz lamps. Never 1/60 s under mains lamps.
-- **Slow-motion moments at 50 fps and 1/100 s**, then back to 25. Only footage shot at twice the reel's rate slows cleanly.
+- **One frame rate all night (25 fps, or 30 fps once tested) at a 1/50 s shutter.** The shutter is what stops flicker under India's 50 Hz lamps; 30 fps plays more evenly on iPhones. Never 1/60 s under mains lamps.
+- **Slow-motion moments at twice the night's rate and 1/100 s** (50 fps for 25, 60 fps for 30). Only footage shot at twice the reel's rate slows cleanly; the studio no longer makes slow motion up by default.
+- **Low ISO, the main 26 mm lens at night, and a still camera.** Noise is the main reason reels look grainy, and every crop in the edit multiplies it. Frame each shot as it will be used, hold still or use a gimbal, and never zoom while recording.
+- **Shoot landscape for a horizontal-frame reel** (16:9 inside 9:16, the shape of most saved references).
 - **Lock white balance to the light**: 3200 K under tungsten and pandal lamps, 4000–4500 K under mixed LED, 5600 K in daylight.
 - **Protect the highlights.** A slightly dark night is fine; blown gold and crushed black can't be recovered in 8-bit.
 - **A LUT on the monitor only.** If one is burned in, type its name in the clip's slate notes.
@@ -326,7 +328,7 @@ Levels are in section 8 and section 12.
 
 ### 7.10 Phase 7b: the review gate
 Before you see any cut, **a reviewer on a different model** watches it, and the editor never grades its own work:
-1. `scripts/pregate.py` runs the scripted checks in minutes: the file check, an every-frame defect scan, a camera-shake audit, the camera check, a sound-effect sync check, what changed since the last version, and review sheets.
+1. `scripts/pregate.py` runs the scripted checks in minutes: the file check, an every-frame defect scan, a camera-shake audit, a picture-quality probe against your saved references, the camera check, a sound-effect sync check, what changed since the last version, and review sheets.
 2. The `reel-reviewer` agent judges the cut blind against the brief.
 3. Claude fixes or answers every blocker and major, then reruns the gate (at most two loops, plus one focused check of the last fixes).
 
@@ -406,9 +408,10 @@ Colour runs in stages, always in this order. The full recipes are in `effects-pl
 
 ## 11. Motion, effects, transitions and type
 
-- **Motion on V1** (playbook §B): slow pushes, punch-ins and snap zooms, but only on held shots. Shakes and snap zooms read as jumps on handheld footage. Handheld moving shots are stabilised with Warp Stabilizer by default and re-measured with `scripts/shake_report.py`.
-- **Time** (§C): slow motion only from footage shot at twice the sequence rate or more. Slow motion on 30 fps or slower footage goes through After Effects Timewarp, because Premiere's Optical Flow ghosted on fast motion.
-- **Transitions** (§D): the hard cut is the default, with at most 3–4 other transitions per 30 s.
+- **Restraint first** (playbook §0): every designed move is an entry on the brief's **effect list**, which you approve. Default none; two or fewer is the guide.
+- **Motion on V1** (playbook §B): gentle pushes on held shots. Punch-ins and snap zooms only from the effect list, never on night footage, where a crop multiplies the noise. Shakes and snap zooms read as jumps on handheld footage. Claude picks the steadier take first and uses Warp Stabilizer only on shots that still shake, re-measured with `scripts/shake_report.py`.
+- **Time** (§C): real speed by default. Real slow motion comes from footage shot at twice the sequence rate. Synthetic slow motion from 30 fps or slower (After Effects Timewarp) only when you pick it on a phone sample of that shot: it ghosted or smeared in 6 of 7 reels.
+- **Transitions** (§D): the hard cut is the default. Other transitions go only where the brief places them.
 - **Type and graphics** (§E): HyperFrames compositions rendered as 1080×1920 transparent ProRes 4444 and placed on V5. `scripts/text_behind.py` puts a word behind the subject, on held shots only. Story devices: `scripts/step_print.py` for a step-printed stutter, `scripts/photo_prints.py` for photo-print inserts.
 - **After Effects** (`after-effects.md`): denoise, speed-ramp curves, Timewarp and glow, run by script through `scripts/ae_roundtrip.py` and swapped in at the same timeline position.
 
@@ -451,10 +454,13 @@ AI video is the **last step** of the bad-footage ladder, for shots the footage c
 - `verify_render.py`: codec, H.264 High, 1080×1920, fps, bitrate of 12 Mb/s or more, TV-range 4:2:0, BT.709 tags, black or frozen frames, −14 LUFS / −1 dBTP;
 - `frame_scan.py`: every frame, with typed `--designed` spans that allow only their own flags;
 - `motion_audit.py`: camera shake per shot; a step-print that jumps more than 4 px fails;
+- `quality_probe.py`: each shot's grain, busyness, flicker and cadence against the director's saved references (`studio/reference-targets.json`). Grain above the line fails; the rest get a full-rate strip;
 - `camera_fidelity.py`: each shot against its camera file;
 - `sfx_sync.py`: every placed sound found in the export;
 - `render_diff.py`: what changed since the last reviewed version;
-- 2 fps review sheets, plus full-rate strips of the hook, the designed spans and every shot marked REVIEW.
+- 2 fps review sheets, plus full-rate strips of the hook, the designed spans, every shot marked REVIEW and every quality WARN.
+
+**After posting**, Claude checks the reel as Instagram serves it (`instagram-served-check.md`): the encode tier, resolution, bitrate, and the detail kept against the export. A small account's reels get Instagram's basic encode: Kolkata got 720p H.264 baseline at 1.4 Mb/s. So the export has to be clean enough to survive it.
 
 **The reviewer** (`.claude/agents/reel-reviewer.md`) runs on a model other than the editor's. It does a full review for a new cut, and a focused review of the changed shots for a fix version. It judges blind: it gets no QA conclusions from the editor. A REVIEW shot is cleared only by the reviewer's verdict on its strip. The report is saved unedited as `analysis/review_v<N>.md`, and every blocker and major is answered as fixed, intended or disputed with evidence.
 
@@ -562,6 +568,7 @@ Run Python tools with the studio's environment: `./.venv/bin/python scripts/<too
 | `watch.py` | Watches a video without playing it: 2 fps contact sheets with the waveform |
 | `cut_view.sh` | Filmstrip and waveform for a time range |
 | `pregate.py` | Runs all the scripted checks before the review gate |
+| `quality_probe.py` | Per-shot grain, busyness, flicker and cadence against the director's saved references |
 | `verify_render.py` | Final file check (codec, size, fps, bitrate, colour tags, loudness) |
 | `encode_master.py` | ProRes master → H.264 High deliverables and the phone copy |
 

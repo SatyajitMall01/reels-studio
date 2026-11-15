@@ -3,13 +3,13 @@
 Architecture work not yet done. HQ triages it at the start of each `/studio-hq` session. Change requests from reels are linked here when deferred.
 
 ## Next: kolkata batches (triaged 2026-11-08) and Batch C
-v0.9.1 shipped the rules, notes and small fixes from the kolkata retro and its 12 CRs. v0.9.2 (Cinematic depth bake) and v0.10.0 (AI shots and the bad-footage ladder, `studio/plans/ai-shots-plan.md`) came in between, and v0.11.0 (real sound effects: Openverse, earshot, `sfx_sync.py`) took the next number on the director's request of 2026-11-12, so the process batch is now v0.12 and the tools batch v0.13. Still open from v0.10.0: the Veo vs Omni comparison run (about $0.40, director's OK). The rest, in order, each with the director's go-ahead in an HQ session:
-- **v0.12, process (kolkata's biggest losses: story ~5 h, song ~3 h, title and cover ~2 h):**
+v0.9.1 shipped the rules, notes and small fixes from the kolkata retro and its 12 CRs. v0.9.2 (Cinematic depth bake) and v0.10.0 (AI shots and the bad-footage ladder, `studio/plans/ai-shots-plan.md`) came in between, and v0.11.0 (real sound effects: Openverse, earshot, `sfx_sync.py`) took the next number on the director's request of 2026-11-12, and v0.12.0 (restraint by default and the quality probe, from the director's quality complaint of 2026-11-15) took the next one, so the process batch is now **v0.13** and the tools batch **v0.14**. Still open from v0.10.0: the Veo vs Omni comparison run (about $0.40, director's OK). The rest, in order, each with the director's go-ahead in an HQ session:
+- **v0.13, process (kolkata's biggest losses: story ~5 h, song ~3 h, title and cover ~2 h):**
   - a line table for **every** reel type, by lyric meaning for songs, and a **story check** in `review-gate.md` / `reel-reviewer` (CR montage-line-table 1–2);
   - the `lyric-shots` skill the director asked for (CR lyric-shot-skill), tested on the kolkata song first;
   - a song-research step after the story spine, a "⏸ song audition" checkpoint, `song-research.md` and `scripts/song_fit.py` (CR song-research 1–3);
   - title words and a type sheet in Round 2, `scripts/make_title.py`, an `assets/fonts/` README, and a Phase 8 cover step (CR cover-title-type 1, 2, 4).
-- **v0.13, tools (with Batch C below):**
+- **v0.14, tools (with Batch C below):**
   - `scripts/depth_clarity.py`, from `projects/_hqtest/tools/depth_clarity.py` (HQ C047, 2026-11-11). It uses `cine_bake --disparity-out` for denoise plus sharpening and local contrast on the focus plane only. With an AI fill it also matches the fill's bokeh and near-plane detail to the camera's, measured. It should run from the EDL next to `cine_bake.py`;
   - `scripts/gap_fill.py`, from `projects/_hqtest/tools/gap_fill_splice.py` (HQ C047 test, 2026-11-11). It puts an AI gap fill into a camera clip: bake-aware, upright, matched to the camera's colour, saturation and measured sharpness, with seam dissolves, and it reports the seam frame steps against the camera's. Also landscape and window support in `conform_clip.py`, which today crops to 1080×1920 only;
   - `scripts/preview_fx.py` (stabilise, motion-compensated slow-mo, ramps, whips, Screen overlays) and a shake ranking of planned windows (CR preview-fx);

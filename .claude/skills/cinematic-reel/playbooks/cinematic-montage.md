@@ -11,18 +11,19 @@
 - **Pick the best moment, not the whole clip** (`selects_score.py`, then check by eye). Never repeat a subject or framing. *Source:* the v8 review flagged the same carved panel used twice, 9 s apart.
 
 ## Camera and motion
+- **Restraint first** (effects-playbook §0, v0.12): real speed, hard cuts, a still or steady camera. Every designed move is an entry on the brief's effect list. The director's "Reel Concepts" references are locked-off or slow moves (median motion 1.8), and our busy handheld reels measured 6–8.
 - **Handheld footage: no impact shakes or snap zooms.** They read as jumps on top of real hand movement. *Source:* my-reel round 2.
 - **Digital push or pull only on steady holds** (`motion_holds.py`): 100→104–110 % over the shot, eased.
-- **Stabilise handheld moves** with Warp in Premiere, then re-measure with `shake_report.py` and scan for Warp banners.
-- **Slow-mo:** use Timewarp (After Effects) or Optical Flow only on calm shots. Check fast or crossing motion for ghosting. *Source:* the C076 smear in v8.
+- **Prefer the steady take** (`shake_report.py`, `motion_holds.py`). Warp only shots that still fail the shake limits, then re-measure and scan for Warp banners.
+- **Slow-mo: off by default** (§0). Real slow motion needs 50/60 fps footage. Synthetic (Timewarp or Optical Flow) only when the director picks it on a phone sample of that shot, and only on calm shots. *Source:* the C076 smear in v8; ghosts and "painted" faces in 6 of 7 reels.
 
 ## Type and graphics
 - **A title and an end card only**; beat words only when the director supplies words that mean something. *Source:* the v1 words "DUM · DUM · DURGA" read as meaningless.
 - **Animated title** with HyperFrames: focus-pull settle, the profile's DIN Condensed Bold in cream, gold glow (or a dark halo for a calm reel), placed per shot and **never on the subject** (`motion-and-ai.md` §1).
-- **Text behind the subject:** at most one signature moment, on a steady hold of an idol or person against a contrasting background (`text_behind.py`). *Source:* "MAA" behind the folk Durga in puja-night-2.
+- **Text behind the subject:** only from the brief's effect list, at most one signature moment, on a steady hold of an idol or person against a contrasting background (`text_behind.py`). *Source:* "MAA" behind the folk Durga in puja-night-2.
 
 ## Transitions
-- **Hard cut by default.** Signature transitions are a flash or a 3-frame dip to white on a big hit, a whip on fast motion, and a dip to black at the end.
+- **Hard cut by default.** A dip to black at the end. A flash on a big hit or a whip on fast motion only from the brief's effect list (effects-playbook §0).
 - **Never stack decorative looks**: no light leaks plus rays plus particles, and no Premiere *Light Leaks* transition (it strobes). *Source:* the v8 review and the pilot's QA. Dissolves only where the brief asks for them.
 
 ## Sound
@@ -39,8 +40,8 @@
   - Warm Film (`Fuji F125 Kodak 2393`) is proven on both reels but pushes toward red.
   - Looks printed to 2395 lift the blacks: use them only when the brief wants a faded memory.
 - **Warm looks push red:** fix it with the look layer's temperature plus a little green tint, never by cooling the clips.
-- **Grain: none on night phone footage, ≤ 5 % otherwise, faded with the picture.** *Source:* 40 % was "too much grain" in my-reel round 2; goddess's 10 % added to what the director called over-processed.
-- **Denoise dark shots** in After Effects (`denoise`) when the frame scan or your eye shows noise. *Source:* my-reel v7, −12…−29 % dark-area noise.
+- **Grain: none on footage that already shows noise (all night phone footage), ≤ 5 % otherwise and only from the brief, faded with the picture.** *Source:* 40 % was "too much grain" in my-reel round 2; goddess's 10 % added to what the director called over-processed.
+- **Denoise dark shots lightly** in After Effects (`denoise`) when `quality_probe.py` or your eye shows noise, decided once, never stacked with sharpening. *Source:* my-reel v7, −12…−29 % dark-area noise; Pujo's waxy over-denoise.
 
 ## AI shots
 - Rarely needed: both reels had **no gap** the footage couldn't fill. If one is needed, follow the ladder and policy in `motion-and-ai.md` §3. The idol or the crowd only when the brief names the shot, and never as proof.

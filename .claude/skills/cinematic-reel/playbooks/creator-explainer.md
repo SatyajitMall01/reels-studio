@@ -12,7 +12,7 @@
 
 ## Camera and motion
 - **Zoom anchored to the top of the frame**, so a centre zoom never crops the head.
-- **Punch-in on emphasis** (the number, the promise, the punchline): 118–125 % over 0.30–0.35 s, ease-out.
+- **Punch-in on emphasis** (the number, the promise, the punchline): 118–125 % over 0.30–0.35 s, ease-out. These emphasis zooms are this playbook's one standing entry on the brief's effect list (effects-playbook §0): list them once, with their count. On night or noisy footage, use cuts instead of zooms.
 - **Slow creep across a thought:** 110–112 % over 5–10 s, released at the next cut.
 - **Snap back to 100 % at every cut;** never carry a zoom across a cut.
 - **Limits:** 1080p source up to 112 %; 4K source up to 150 %. The base framing still shows ≥ 80 % of the camera width (effects-playbook §B); these zooms are named moves on top of it.

@@ -2,13 +2,13 @@
 
 You are the **editor**. The user is the **director**. They hand you clips, answer your questions, and share references. **You write the brief, the cut plan and the treatment**, then turn the clips into a fully treated cinematic 9:16 Instagram Reel in Adobe Premiere Pro. You never make a creative call they'd want to make without showing it to them first.
 
-**Never just cut and stitch.** Every reel gets:
+**Never just cut and stitch, and never over-treat.** Every reel gets:
 - per-clip colour correction and shot matching, **camera-true by default** (effects-playbook §A0);
-- a creative look and texture only where the director picks them over the camera-true grade;
-- motion on the talking head;
-- planned effects and transitions;
 - type and graphics;
-- sound design.
+- sound design;
+- a creative look, texture and designed moves only where the director picks them. Designed moves are speed changes, slow motion, step-prints, zooms and shakes, wipes, flashes, and type mattes. The brief's **effect list** names each one, and the director approves it.
+
+**Restraint is the default (v0.12, effects-playbook §0).** Footage plays at real speed, cuts are hard, and the camera is still or steady. The director's saved references are plain, and our treated reels read as glitchy, flickery, grainy and over-processed (`studio/reviews/quality-diagnosis-2026-11-15.md`). A talking head may take a gentle push (creator-explainer).
 
 The menu is `.claude/skills/cinematic-reel/effects-playbook.md`. **Which** moves a reel uses, how often and how loud comes from its **editing playbook**, one per kind of video (`.claude/skills/cinematic-reel/playbooks/`: `cinematic-montage`, `story-montage`, `creator-explainer`). The brief names it.
 
@@ -83,10 +83,10 @@ Sequence: **1080×1920**. **Frame rate = the most common frame rate in the foota
 | Track | Content | Rules |
 |---|---|---|
 | **V5** | Captions & kinetic type | Above the grade, so text stays clean. 2–4 words per line, in the safe zone: clear of top 220 px, bottom 320 px, right 120 px (IG buttons). |
-| **V4** | Texture overlays | Grain / light leaks / film burns from `assets/overlays/`, with `set_blend_mode` (Overlay / Soft Light / Screen) + `set_clip_opacity`. Optional: never grain on night phone footage, ≤ 5 % otherwise (effects-playbook §A4). |
+| **V4** | Texture overlays | Grain / light leaks / film burns from `assets/overlays/`, with `set_blend_mode` (Overlay / Soft Light / Screen) + `set_clip_opacity`. Optional, and only from the brief: never grain on footage that already shows noise (all night phone footage), ≤ 5 % otherwise (effects-playbook §A4). |
 | **V3** | Creative look adjustment layer (optional) | Only when the director picked a look over camera-true (effects-playbook §A3). Spans the reel. Film look or LUT starting at 30 % (the §A3 rows give each look's full intensity), look contrast, vignette. Grades V1 + V2 only. |
-| **V2** | B-roll & HyperFrames graphics | Each clip primary-corrected. Cutaways on visual nouns / emotional shifts. Time effects (slow-mo, ramps, freeze). |
-| **V1** | A-roll (talking head / hero action) | Primary-corrected. Reframed to 9:16, showing ≥ 80 % of the camera width on vertical footage (Scale ≤ 62.5 on vertical 4K); landscape footage takes the framing the director picks in the brief (playbook §B). Punch-ins, slow pushes, snap zooms (playbook §B). |
+| **V2** | B-roll & HyperFrames graphics | Each clip primary-corrected. Cutaways on visual nouns / emotional shifts. Real speed; time effects (slow-mo, ramps, freeze) only from the brief's effect list (effects-playbook §0). |
+| **V1** | A-roll (talking head / hero action) | Primary-corrected. Reframed to 9:16, showing ≥ 80 % of the camera width on vertical footage (Scale ≤ 62.5 on vertical 4K); landscape footage takes the framing the director picks in the brief, the 16:9 film frame offered first (playbook §B). Gentle pushes on steady holds; punch-ins and snap zooms only from the effect list, never on night footage (playbook §0, §B). |
 | **A1** | Dialogue (natural sound in `music-montage`) | Constant Power crossfade at every cut. Peaks −6 to −3 dB. Music-montage: muted or ≤ −20 dB (§4c). |
 | **A2** | SFX | From `assets/sfx/`, on B-roll entries and graphic reveals, −14 to −18 dB. |
 | **A3** | Music | From `assets/music/`. −8 dB in gaps, ducked to −18…−22 dB under speech (`setup_ducking` / `add_audio_keyframes`). Music-montage: lead track, peaks −1 to −3 dB, no ducking (§4c). |
@@ -141,9 +141,10 @@ Every reel has a **reel type**: `talking-head`, `music-montage` or `hybrid` (`st
   - the file check;
   - the every-frame scan, where typed `--designed` spans allow only their own flags;
   - `scripts/motion_audit.py`: camera shake per shot, failing any step-print that jumps more than 4 px;
+  - `scripts/quality_probe.py`: each shot's grain, busyness, flicker and cadence against the director's saved references (`studio/reference-targets.json`). Grain above the line fails; the rest get a strip for the reviewer;
   - the camera check;
   - `scripts/render_diff.py` (what changed since the last reviewed version);
-  - the 2 fps sheets, plus full-rate strips of the hook, the designed spans and every REVIEW shot.
+  - the 2 fps sheets, plus full-rate strips of the hook, the designed spans, every REVIEW shot and every quality WARN.
 
   Every export passes it before the reviewer is called. A REVIEW shot is cleared only by the reviewer's verdict on its strip.
 - Story devices: `scripts/step_print.py` (step-printed stutter render) and `scripts/photo_prints.py` (photo-print inserts on paper), used by the story-montage playbook.

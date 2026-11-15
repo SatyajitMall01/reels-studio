@@ -31,12 +31,18 @@
 - **Primary correction (per clip, V1/V2):** what each clip needs (from `analysis/summary.md`)
 - **Shot matching:** which clips must match which
 - **Creative look (V3 adjustment layer):** none (camera-true, the default, effects-playbook §A0), or the look the director picked on the Round 2 sheet: name, intensity (start 30 %), why
-- **Texture (V4):** none by default (and always none on night phone footage); otherwise grain ≤ 5 %, light leaks, vignette, halation
+- **Texture (V4):** none by default (and always none on footage that already shows noise: all night phone footage); otherwise grain ≤ 5 %, light leaks, vignette, halation
 - **Camera-check exceptions:** shots allowed to depart from their camera file (`camera_fidelity.py --allow`), each with its reason
-- **Framing exceptions:** shots tighter than 80 % of the camera width, each with its reason
+- **Framing:** for landscape footage, the pick from §B (the 16:9 film frame offered first). **Exceptions:** shots tighter than 80 % of the camera width, each with its reason (never on night footage)
 
-### Effects & transitions
-- List the named moves from `effects-playbook.md` and where they go (timecode or beat).
+### Effect list (restraint by default, effects-playbook §0)
+Default: **none**. Real speed, hard cuts, still or steady camera, a dip to black at the end. Two or fewer is the guide.
+
+| # | Move (from `effects-playbook.md`) | Shot / beat | Why this reel needs it |
+|---|---|---|---|
+| | e.g. real slow-mo (shot at 50 fps) · step-print · punch-in · flash · dissolve | | |
+
+Synthetic slow motion from footage below 2× the sequence rate is listed only after the director picks it on a phone sample of that shot.
 
 ### Type & graphics
 - Caption style · font · colours · position · motion graphics beats

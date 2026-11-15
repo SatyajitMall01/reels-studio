@@ -1,0 +1,33 @@
+{
+  "_about": "What the director's saved references look like, measured the way scripts/quality_probe.py measures (luma at 540x960, every frame). Source: studio/reviews/quality-diagnosis-2026-11-15.md. HQ re-measures when the Reel Concepts collection changes. Thresholds are provisional: they were set from 6 studio reels and 37 references, and apply to OUR EXPORT (before Instagram's re-encode, which lowered our noise readings by about 25-40 %).",
+  "measured": "2026-11-15",
+  "collection": "Instagram saved collection 'Reel Concepts' (30 reels), as Instagram served them",
+  "reference_medians": {
+    "temporal_noise": 0.08,
+    "motion": 1.8,
+    "flicker_rms": 0.08
+  },
+  "reference_ranges": {
+    "temporal_noise": [0.001, 0.68],
+    "motion": [0.01, 8.4],
+    "flicker_rms": [0.017, 0.24],
+    "frame_rates": {"30": 18, "60": 5, "24": 4, "25": 3},
+    "horizontal_pictures": "23 of 30 (16:9 or 4:3, shown with bars)"
+  },
+  "_our_exports_note": "Read with the first, motion-sensitive measure; Pujo and Goddess move so much that the still-frame measure can't read most of their shots. Camera clips on still frames: 0.23 (ISO <= 100) to 0.51 (ISO > 1600).",
+  "our_exports_2026-11-15": {
+    "pujo-ki-asolei-sobar_v19_IG": {"temporal_noise": 0.655, "served": 0.493},
+    "we-never-treated-her-like-a-goddess_v10b_IG": {"temporal_noise": 0.626, "served": 0.381},
+    "puja-night-2_v6d_IG": {"temporal_noise": 0.713},
+    "uski-aankhein_v10b_IG": {"temporal_noise": 0.313},
+    "kolkata_v8c_mix": {"temporal_noise": 0.109, "served": 0.12},
+    "could-not-go-home-diwali_v10d_IG": {"temporal_noise": 0.034, "served": 0.015}
+  },
+  "thresholds": {
+    "temporal_noise": {"warn": 0.30, "fail": 0.50, "still_motion": 3.0, "why": "export noise above 0.50 served above 27 of 30 references and read as grainy (Pujo, Goddess). Measured only on frames whose motion is at most still_motion: motion reads as noise in this measure (2026-11-15 recheck)"},
+    "motion": {"warn": 4.3, "why": "a shot whose median frame change is above 26 of 30 references reads as busy or jumpy; judge it on the strip"},
+    "flicker_peak": {"warn": 2.0, "why": "a whole-frame brightness pulse of 2+ levels (8-bit) inside a shot is visible"},
+    "flicker_rms": {"warn": 0.25, "why": "above every reference"},
+    "camera_noise_no_grain": 0.15
+  }
+}

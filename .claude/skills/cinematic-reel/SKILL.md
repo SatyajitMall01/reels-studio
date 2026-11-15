@@ -135,7 +135,7 @@ Offer choices that fit *this* footage, for example:
 → Now ask **Round 2** of the interview.
 
 ## Phase 2: Write the brief + cut plan
-1. Fill in `projects/<name>/brief.md` completely: **playbook** (and any rule this reel overrides, with the reason), idea, hook, references turned into measured parameters, **Treatment** (pace, colour stages A1–A4 with A3/A4 marked "none" unless the director picked a look or texture, named effects and transitions with their beats, type, sound), the clip table, must/must-nots, open questions.
+1. Fill in `projects/<name>/brief.md` completely: **playbook** (and any rule this reel overrides, with the reason), idea, hook, references turned into measured parameters, **Treatment** (pace, colour stages A1–A4 with A3/A4 marked "none" unless the director picked a look or texture, named effects and transitions with their beats, type, sound), the **effect list** (every designed move: speed change, slow motion, step-print, zoom, shake, wipe, flash, type matte, text-behind, each with its shot and why; default **none**, two or fewer is the guide, effects-playbook §0), the framing (for landscape footage the 16:9 film frame is offered first, §B), the clip table, must/must-nots, open questions.
    For **music-montage**, the Treatment must also include:
    - **Energy arc:** which song sections go up or down and where the shot length changes. Default: slow open → build → full → breath → payoff → outro. **Never one shot per bar for the whole reel.** That read as mechanical in the pilot. The music may be edited (e.g. intro joined to the main section on a downbeat).
    - **Generated shots (if any):** every AI-generated shot gets its own row, labelled **AI-generated**, with the prompt, why the footage can't provide it (or why its footage and stock are unusable), the ladder steps already tried, and the cost from the `gen_video.py` dry run. The director approves each at Checkpoint 1 (`motion-and-ai.md` §3).
@@ -183,18 +183,18 @@ Give the director a short summary in chat: the concept, hook, look, 4–6 signat
 
 ## Phase 5: Motion, effects, B-roll, graphics, captions
 Execute the Treatment from the brief, beat by beat:
-1. V1 moves (punch-ins, slow pushes, snap zooms, shakes), playbook §B. **Not on handheld footage**: shakes and snap zooms read as "jumps" there, so use push/pull on holds.
-   Stabilise handheld moving shots by default with Warp Stabilizer. For speed-changed or interpreted clips, nest first: `seq.setInPoint/OutPoint`, target only V1, `createSubsequence(false)`, swap the nest in, then Warp the nest. Afterwards:
+1. V1 moves, playbook §B: only those on the brief's effect list, plus gentle pushes on steady holds (§0). **Not on handheld footage**: shakes and snap zooms read as "jumps" there, so use push/pull on holds. **No punch-ins on night footage.**
+   **Stabilise only what needs it** (§0): pick the steadier take or part first (`shake_report.py`, `motion_holds.py`), then Warp only shots that still fail the shake limits, never one with an in-camera zoom or a whip. For speed-changed or interpreted clips, nest first: `seq.setInPoint/OutPoint`, target only V1, `createSubsequence(false)`, swap the nest in, then Warp the nest. Afterwards:
    - re-measure with `scripts/shake_report.py` (before vs after);
    - scan the export for Warp's "Analyzing" banner, a text band mid-frame.
-2. B-roll on V2 at the trigger words, with time effects (slow-mo, ramps, freeze, reverse), §C.
-3. Transitions at the planned cuts, §D. Hard cut is the default; keep it to 3–4 non-cut transitions per 30 s.
+2. B-roll on V2 at the trigger words, at real speed. Time effects (slow-mo, ramps, freeze, reverse, §C) only from the effect list.
+3. Transitions at the planned cuts, §D. Hard cut is the default; a non-cut transition only where the brief places one (§0).
 4. Graphics: HyperFrames motion graphics rendered as ProRes 4444 alpha and placed on V5, positioned per shot. Text-behind-subject goes on holds only, via `scripts/text_behind.py` (`motion-and-ai.md` §1–2).
 5. Captions on V5, in the style from the brief and inside the safe zone.
 6. After each group: `get_timeline_summary`, `list_clip_effects` on 2–3 clips to confirm nothing stacked twice, then `save_project`.
 
 ## Phase 5b: After Effects finishing (optional)
-For shots that need **denoise, a real speed-ramp curve, Timewarp slow-mo or glow/halation**, follow `after-effects.md` (same folder). **Slow motion on ≤ 30 fps footage goes through After Effects Timewarp by default** (effects-playbook §C): Premiere's Optical Flow ghosted on goddess v10.
+For shots that need **denoise, a real speed-ramp curve, Timewarp slow-mo or glow/halation**, follow `after-effects.md` (same folder). **Slow motion on ≤ 30 fps footage is off by default** (effects-playbook §0, v0.12): it ghosted, smeared or "painted" faces in 6 of 7 reels. When the director picks it on a full-rate phone sample of that shot, it goes through After Effects Timewarp (§C): Premiere's Optical Flow ghosted on goddess v10.
 1. Write `analysis/ae_jobs.json` from the EDL.
 2. Run `scripts/ae_roundtrip.py`, in the background, at about 4 min per shot.
 3. Check every `_compare.png` and the before/after reports.
@@ -263,7 +263,15 @@ Read `instagram-strategy.md` (same folder) first: where it disagrees with the `i
 - alt text, location, and the cover frame timecode;
 - no collab invite and no Story share (director profile).
 
-**Posting** happens only when the director asks for that post. Follow `ig-posting-reality.md` (iPhone Mirroring), and stop before Share: the director taps it.
+**Posting** happens only when the director asks for that post. Follow `ig-posting-reality.md` (iPhone Mirroring), and stop before Share: the director taps it. Check that "Upload at highest quality" is on before Share.
+
+**After it's posted** (v0.12): check the reel as Instagram serves it, following `instagram-served-check.md` (same folder). Record in `project.md`:
+- Instagram's encode tier (basic or advanced);
+- the served resolution and bitrate;
+- the detail kept against our export;
+- that the reel's audio plays, by the director's ear: the "Audio unavailable" label isn't evidence (Goddess shows it and plays).
+
+Our reels get Instagram's basic encode until they're popular, so the export has to survive it.
 
 ### ⏸ Checkpoint 3: approve the package.
 

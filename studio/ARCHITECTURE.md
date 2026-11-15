@@ -27,7 +27,8 @@ Always open sessions at the `reels-studio/` root, never inside `projects/<reel>/
 | `studio/` | HQ | Except the two carve-outs below |
 | `studio/director-profile.md` | HQ | Director's branding and preferences. Every reel reads it; changes arrive by CR. Local only (git-ignored): `setup.sh` creates it from `director-profile.example.md` |
 | `studio/upstream/` | HQ | Drafted bug reports for third-party tools. Filing them is the director's call |
-| `studio/reviews/` | HQ | Outside reviews of the studio (e.g. the Gemini review). Each claim is a hypothesis until verified (BACKLOG) |
+| `studio/reviews/` | HQ | Reviews of the studio: outside ones (e.g. the Gemini review; each claim a hypothesis until verified, BACKLOG) and HQ's own measured diagnoses (e.g. `quality-diagnosis-2026-11-15.md`) |
+| `studio/reference-targets.json` | HQ | The director's saved references, measured (noise, motion, flicker), and the thresholds `scripts/quality_probe.py` checks each shot against. HQ re-measures when the collection changes |
 | `studio/change-requests/` | Any session | Reel sessions file requests here |
 | `studio/retros/` | Any session | Reel sessions copy their finished retro here |
 | `studio/ledger/` | Any session (scripts) | Append-only spend logs, e.g. `ai-spend.jsonl` from `gen_video.py`. Never edit past entries. Local only (git-ignored `*.jsonl`, see its README) |

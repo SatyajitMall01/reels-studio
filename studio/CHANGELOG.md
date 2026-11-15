@@ -1,5 +1,60 @@
 # Studio Changelog
 
+## 0.12.0 — 2026-11-15
+**Restraint by default, a per-shot quality probe against the director's saved references, a shooting guide built on what the footage needs, and a post-upload check of what Instagram actually serves** (minor: reels in progress pick it up at their next round, CLAUDE.md §0.1).
+
+**Why.** The director: "The videos are glitchy, the light flickers, the video flickers here and there, the edit looks off, and everything looks unnatural and grainy." HQ measured the evidence in `studio/reviews/quality-diagnosis-2026-11-15.md`:
+- the 30 reels in the director's Instagram "Reel Concepts" collection and the 4 studio reels on their Reels tab, as Instagram serves them;
+- the 6 local finals, 7 local references and sample camera files;
+- the review history of all 7 reels.
+
+**Findings:**
+- **Noise.** The references sit at a temporal noise of 0.08 (median). Pujo is at 0.49 and Goddess at 0.38: noisier than 29 and 27 of the 30. A later recheck of all 487 camera clips, on still frames only, put them at 0.23–0.51 by ISO (3–6× the references), with a 2× crop adding about 1.3–1.4×. The first figures (0.4–0.9, crops up to 12×) had read camera motion as noise. `quality_probe.py` now measures noise on still frames only. The same recheck found the camera settings off: only 72 clips at 1/50 s, auto exposure on three nights, Oct 15 recorded in HD at 13 Mb/s, and a median camera motion of 6.4 against the references' 1.8 (shooting guide updated).
+- **Motion.** The references sit at 1.8. Pujo is at 8.3 and Goddess at 6.1, busier than 29 of the 30.
+- **Shape.** 23 of the 30 references are horizontal frames.
+- **Treatment.** Synthetic slow motion ghosted or smeared in 6 of 7 reels. A step-print on handheld footage read as glitchy. Stacked grain, sharpen, denoise and AI upscaling were called over-processed.
+- **Flicker** came from 30 fps at a 1/60 s shutter under 50 Hz lamps, which post-production couldn't fully remove.
+- **Instagram's encode.** Instagram serves a small account's reels with its basic encode: Goddess and Pujo as VP9 basic 1080p at 2.8–3.2 Mb/s (83–95 % of the export's detail), Kolkata as only H.264 baseline 720p at 1.39 Mb/s, with +20–28 % 8×8 blocking. Most references get the advanced q20–q90 ladder.
+
+**What changed:**
+- **Restraint by default** (CLAUDE.md intro and §3; effects-playbook new **§0**, §A0, §A4, §B, §C, §D; SKILL.md Phases 2, 5, 5b; the cinematic-montage, story-montage and creator-explainer playbooks; `projects/_template/brief.md`):
+  - real speed, hard cuts, a still or steady camera;
+  - every designed move goes on the brief's new **effect list**, which the director approves. Default none, two or fewer is the guide;
+  - no synthetic slow motion unless the director picks it on a phone sample;
+  - Warp only on shots that still shake after picking the steady take;
+  - no crop-in or punch-in on night or noisy footage, and the 16:9 film frame offered first for landscape footage;
+  - no grain on footage that already shows noise, and no sharpening, clarity or AI upscaling unless picked;
+  - denoise decided once, never stacked.
+- **`scripts/quality_probe.py`** (new; run by `pregate.py` as check 2c). For every shot it measures temporal noise, motion, flicker (RMS and peak) and cadence (repeated frames, jumps), against `studio/reference-targets.json` (new: the Reel Concepts medians and provisional thresholds).
+  - Noise above 0.50 fails. `--allow-noise <shot>` is only for a shot the director accepted.
+  - Noise above 0.30, motion above 4.3, a flicker pulse above 2 levels, or a repeat or jump inside a shot each give a WARN plus a full-rate strip for the reviewer.
+  - `--whole` measures a camera clip, to tell whether a source is already noisy.
+  - Tested: Diwali v10d, 18 shots, PASS (noise 0.037). Goddess v10b FAILs (0.63, motion 6.3). A Goddess camera clip FAILs (0.52), so its noise comes from the shoot.
+- **Shooting guide:**
+  - the shutter, not the frame rate, stops lamp flicker;
+  - 30 fps at 1/50 s marked for a test night, because 25 fps doesn't divide the iPhone's 120 Hz;
+  - slow motion at 2× the night's rate at 1/100 s;
+  - landscape for horizontal-frame reels;
+  - ISO ≤ 800 at night, and the 26 mm lens at night;
+  - frame each shot as it will be used (no crop-in later);
+  - hold still, and never zoom while recording.
+- **`instagram-served-check.md`** (new, skill folder), plus a Phase 8 step. After posting, record:
+  - Instagram's encode tier, served resolution and bitrate;
+  - the detail kept against the export, using read-only snippets in Claude in Chrome;
+  - **that the audio plays**, by the director's ear.
+
+  Before Share, check that "Upload at highest quality" is on. The phone check (iPhone Mirroring) found:
+  - "Upload at highest quality" on, and "Use less mobile data" off;
+  - views of 127–501 per reel;
+  - Goddess's sound bar reading "Audio unavailable". HQ first took that to mean silence. The director unmuted it and the voiceover plays, so the label is now recorded as not evidence.
+- **Director profile** (local): the Reel Concepts collection recorded as the target look. Slow motion off unless picked, or shot at 2×. Stabilise only what still shakes.
+- **Docs:** GUIDE.md (§1, shooting, §11, pregate, tools), ARCHITECTURE §2 (`studio/reviews/`, `studio/reference-targets.json`). The BACKLOG process and tools batches move to v0.13 and v0.14.
+
+**Reels in flight:**
+- my-reel (build), and Pujo and Goddess (packaging) pick this up at their next round.
+- Nothing already exported changes.
+- The probe's thresholds are provisional, from 6 reels. HQ recalibrates them after the first reel cut under v0.12.
+
 ## 0.11.1 — 2026-11-14
 **Public GitHub repo: a clean layout, a complete guide with PDFs, and nothing personal or copyrighted in git** (patch, safe mid-reel: no workflow rule changed; reel sessions see only that their media stays out of git, as before). The director asked for the repo on GitHub with a clean structure and enough guides, and chose a public repo, reel text and code only, MIT, every branch pushed, and history rewritten so the personal files leave it.
 - **`.gitignore` rebuilt for a public repo.** Reel folders keep only text and code (`.md .py .sh .swift .jsx .html .json .txt`), minus their `audio/ music/ sfx/ grade/ stock/ renders/ transcripts/ .hyperframes/ assets/` folders and the Real-ESRGAN binaries. Before this, `git add -A` would have added 601 files and 1.1 GB, including commercial songs, audio from reference reels, the director's voice takes, posted reels and lyric transcripts. Now it's 371 files, 3.3 MB.

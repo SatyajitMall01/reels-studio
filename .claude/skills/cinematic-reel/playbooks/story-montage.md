@@ -14,7 +14,7 @@ The reference's shot length changes by section, never by habit. Measured medians
 | **Prologue (optional)** | B&W, 5 shots, median 3.0 s | 2–3 shots, ~2.5 s | "Before": a map, a page, a room. Ends on a match cut into colour |
 | **Character intro** | one 9.3 s hold | one 4–6 s hold | The character arrives; the VO sets the question |
 | **Discovery** | median 1.0–1.2 s (min 0.4) | 0.9–1.2 s | Locals' faces, hands, fire, signs. The fastest stretch |
-| **Chaos beat** | 3.6 s of step-print | 1–2 s | Step-printed stutter on fast motion: the energy peak |
+| **Chaos beat** (optional: an effect-list entry, effects-playbook §0) | 3.6 s of step-print | 1–2 s | Step-printed stutter on fast motion: the energy peak. Without it, cut the peak fast on real-speed shots |
 | **Breather** | median 2.2 s | 1.5–2 s | A small human or funny moment (the 7-Eleven onigiri) |
 | **Calm / sacred** | **locked 2.06 s** (1.86–2.14) | one bar per shot | The VO says time slows, and the cutting does: one shot per bar. 2.06 s is a 4/4 bar at ≈ 117 BPM |
 | **Theme statement** | 3 shots of 2.0 s | 2 shots | Split screen with native-language words (below) |
@@ -26,7 +26,7 @@ The reference's shot length changes by section, never by habit. Measured medians
 
 ## Camera and motion
 - **Motion is mostly in camera:** slow-shutter crowds (ghosted walkers), panning speed-blur on bikes, handheld orbits around the character, symmetrical locked frames in sacred spaces. Digital push-ins are rare.
-- **Step-print stutter** for the chaos beat: `scripts/step_print.py` (12 images/s, each held 2–3 frames, long-shutter smear). Use it on traffic or people passing close, or on a fast but smooth camera move; on slow shots it barely reads. 1–2 s, at most twice per reel. **Only from a smooth camera path:** locked off, a steady pan, or stabilised to ≤ 2 px residual shake. Never on random handheld shake or from inside a moving vehicle, where every bump becomes a jump and the director reads it as glitchy (Diwali v3b). Check the render's hold shift (≤ 4 px) with `motion_audit.py --step-print` before placing it (effects-playbook §C).
+- **Step-print stutter** for the chaos beat, **only when the brief's effect list has it** (v0.12): `scripts/step_print.py` (12 images/s, each held 2–3 frames, long-shutter smear). Use it on traffic or people passing close, or on a fast but smooth camera move; on slow shots it barely reads. 1–2 s, at most twice per reel. **Only from a smooth camera path:** locked off, a steady pan, or stabilised to ≤ 2 px residual shake. Never on random handheld shake or from inside a moving vehicle, where every bump becomes a jump and the director reads it as glitchy (Diwali v3b). Check the render's hold shift (≤ 4 px) with `motion_audit.py --step-print` before placing it (effects-playbook §C).
 - Everything else follows the cinematic-montage motion rules: no impact shakes on handheld, pushes only on steady holds.
 
 ## Type and graphics

@@ -14,6 +14,11 @@ script can see. This runs them first, and the reviewer is only called on a clean
                         a step-print whose held images jump > 4 px                                         FAIL → stop
                         camera jerk p95 > 6 or a jump > 8 px  → REVIEW: the reviewer must judge that shot on its
                         full-rate strip. The editor can't waive it (CR gate-missed-glitch).
+  2c. quality_probe.py  per shot against the director's saved references (studio/reference-targets.json, v0.12):
+                        grain/noise above the FAIL line                                                    FAIL → stop
+                        (replace or re-frame the shot; --allow-noise <shot> only after the director accepts it)
+                        noise over the WARN line, busy motion, flicker, repeated frames or jumps inside a shot → WARN,
+                        and the shot gets a full-rate strip for the reviewer
   3. camera_fidelity.py each shot against its camera file: brightness, colour, crush, burn, framing         FAIL → stop
                         (skipped with --no-fidelity, or when the map has no camera clips)
   3b. sfx_sync.py       every sound effect found in the export's own audio (its file's waveform, GCC-PHAT): missing,
@@ -37,7 +42,7 @@ Usage (from the studio root):
       --map projects/<reel>/analysis/map_v4.json -o projects/<reel>/analysis/pregate_v4 \
       --fps 25 --expect 29.84 --designed 0-1.56:step-print 27.3-29.84:end-card [--window 0,505,1080,810] \
       [--reviewed projects/<reel>/renders/exports/<reel>_v3.mp4 --reviewed-map projects/<reel>/analysis/map_v3.json] \
-      [--allow 01_C010] [--exclude-band 0.72,0.82] [--look] [--profile ig-quiet] [--min-mbps 12] \
+      [--allow 01_C010] [--allow-noise 05_C044] [--exclude-band 0.72,0.82] [--look] [--profile ig-quiet] [--min-mbps 12] \
       [--sfx-cues projects/<reel>/analysis/sfx_cues_v4.json]
 --designed takes typed spans in seconds of reel time, T0-T1:type. Types and the scan flags each one expects:
   fade (black, luma_jump) · end-card (black, frozen, luma_jump, blur_dip, white) · title (frozen, blur_dip, luma_jump)
@@ -101,6 +106,8 @@ def main() -> None:
                     help="typed spans (s) where some scan flags are intended: fade, end-card, title, step-print, flash, transition, freeze")
     ap.add_argument("--window", help="x,y,w,h of the picture in the export, for the motion audit (default the whole frame)")
     ap.add_argument("--allow", nargs="*", default=[], help="shots whose fidelity FAILs are deliberate (in the brief)")
+    ap.add_argument("--allow-noise", nargs="*", default=[], help="shots whose grain/noise FAIL the director accepted "
+                    "(quality_probe --allow; note it in project.md)")
     ap.add_argument("--exclude-band", action="append", default=[], metavar="Y0,Y1")
     ap.add_argument("--look", action="store_true", help="a creative look is on (camera_fidelity --look)")
     ap.add_argument("--no-fidelity", action="store_true")
@@ -112,7 +119,7 @@ def main() -> None:
         sys.exit(f"No export {a.export}")
     out = a.out
     out.mkdir(parents=True, exist_ok=True)
-    for old in ("scan.json", "diff.json", "PREGATE.md", "shots.json", "motion.json", "strips.json"):
+    for old in ("scan.json", "diff.json", "PREGATE.md", "shots.json", "motion.json", "strips.json", "quality.json", "QUALITY.md"):
         (out / old).unlink(missing_ok=True)
     for old in ("fidelity", "watch", "strips", "sfx"):
         shutil.rmtree(out / old, ignore_errors=True)
@@ -188,6 +195,34 @@ def main() -> None:
                      ("; ".join(f"{m['shot']}: {m['why']}" for m in mo if m["verdict"] == "REVIEW")
                       + " → the reviewer judges these on strips/ (not waivable)") if review_shots
                      else f"{len(mo)} shots within the motion limits" + (f", {len(steps)} step-print(s) steady" if steps else "")))
+        hard_fail |= bool(bad)
+
+    # 2c. picture quality against the director's references: grain FAILs, the rest WARN with a strip
+    quality_shots: list[tuple[str, float, float]] = []
+    args = [str(HERE / "quality_probe.py"), str(a.export), "--shots", str(out / "shots.json"), "-o", str(out / "quality.json")]
+    if designed:
+        args += ["--designed", *[f"{t0:g}-{t1:g}" for t0, t1, _ in designed]]
+    if a.allow_noise:
+        args += ["--allow", *a.allow_noise]
+    if a.window:
+        args += ["--window", a.window]
+    rc, txt = run(args)
+    if not (out / "quality.json").exists():
+        rows.append(("FAIL", "quality_probe", f"didn't run: {last_line(txt)}"))
+        hard_fail = True
+    else:
+        q = json.loads((out / "quality.json").read_text())
+        bad = [x for x in q["shots"] if x["verdict"] == "FAIL"]
+        warn = [x for x in q["shots"] if x["verdict"] == "WARN"]
+        quality_shots = [(x["shot"], float(x["t"][0]), float(x["t"][1])) for x in warn]
+        head = f"noise {q['reel_temporal_noise']} · motion {q['reel_motion']} (references {q['targets']['temporal_noise']} · {q['targets']['motion']})"
+        if bad:
+            rows.append(("FAIL", "quality_probe", head + "; " + "; ".join(f"{x['shot']}: {x['why']}" for x in bad)))
+        if warn:
+            rows.append(("WARN", "quality_probe", head + "; " + "; ".join(f"{x['shot']}: {x['why']}" for x in warn)
+                         + " → strips for the reviewer; see QUALITY.md"))
+        elif not bad:
+            rows.append(("PASS", "quality_probe", head + f"; {len(q['shots'])} shots within the reference targets"))
         hard_fail |= bool(bad)
 
     # 3. against the camera
@@ -272,7 +307,8 @@ def main() -> None:
         # 5b. every frame where 2 fps can't see: the hook, the designed spans, the REVIEW shots
         dur = max(float(s[2]) for s in shots) if shots else 3.0
         spans = [["hook_0-3s", 0.0, min(3.0, dur)]] + [[f"designed_{kind}_{t0:g}-{t1:g}", t0, t1] for t0, t1, kind in designed] \
-            + [[f"review_{n}", t0, t1] for n, t0, t1 in review_shots]
+            + [[f"review_{n}", t0, t1] for n, t0, t1 in review_shots] \
+            + [[f"quality_{n}", t0, t1] for n, t0, t1 in quality_shots if n not in {r[0] for r in review_shots}]
         (out / "strips.json").write_text(json.dumps(spans, indent=1))
         rc, txt = run([str(HERE / "watch.py"), str(a.export), "-o", str(out / "strips"), "--fps", f"{seq_fps:g}",
                        "--shots", str(out / "strips.json"), "--per-sheet", "40", "--cols", "8", "--tile", "216"]
@@ -289,7 +325,7 @@ def main() -> None:
           "| Check | Result | Detail |", "|---|---|---|"]
     md += [f"| {c} | {r} | {d} |" for r, c, d in rows]
     md += ["", "Fix every FAIL before calling the reviewer. On PASS, give the reviewer this folder: `shots.json`, `scan.json`, "
-           "`motion.json`, `watch/index.md`, **`strips/index.md` (every frame of the hook, the designed spans and the REVIEW "
+           "`motion.json`, `QUALITY.md`, `watch/index.md`, **`strips/index.md` (every frame of the hook, the designed spans and the REVIEW "
            "shots: the reviewer must give each a verdict)**, `fidelity/FIDELITY.md` + `fidelity/fidelity_sheet.jpg`, and "
            "`diff.json` for a focused review, plus `sfx/SFX_SYNC.md` and `sfx/sound_sheet.png` when the reel has sound effects."]
     (out / "PREGATE.md").write_text("\n".join(md) + "\n")

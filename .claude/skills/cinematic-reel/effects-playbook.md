@@ -8,6 +8,48 @@ Named moves the editor can propose in the brief's **Treatment** section. Every r
 
 ---
 
+## 0. Restraint by default (v0.12)
+**Why.** The director asked why our reels look glitchy, flickery, unnatural and grainy next to the reels they save. The 2026-11-15 diagnosis (`studio/reviews/quality-diagnosis-2026-11-15.md`) measured the 30 reels in their "Reel Concepts" collection and our 4 posted reels, as Instagram serves them.
+- **The references are plain:**
+  - real-time footage, hard cuts, long holds;
+  - a camera that barely moves: median motion 1.8, against 6.1 (Goddess) and 8.3 (Pujo);
+  - clean pictures: frame-to-frame noise 0.08, against 0.38–0.49;
+  - 23 of 30 are horizontal frames.
+- **Ours carried the treatment:**
+  - slow motion made up from 25/30 fps in 6 of 7 reels (doubled arms, smear, "painted" faces);
+  - a step-print on handheld footage ("glitchy");
+  - Warp wobble;
+  - punch-ins on night footage: a 2× crop raises the noise about 1.3–1.4× and doubles the size of the phone's noise-reduction blotches;
+  - grain, sharpen, denoise and AI upscaling stacked round after round ("over-processed").
+- **Instagram makes it worse for a small account.** It gives our reels its basic encode, which spends its bits on noise and motion and blocks the darks.
+
+**The default treatment:**
+- **Real time, hard cuts.** Footage plays at its own speed. A dissolve or a dip only where the brief places one (a section change, the ending).
+- **Designed moves come only from the brief's effect list.** Nothing below is on by default:
+  - speed ramps, slow motion, step-print, stutter, freeze, reverse (§C);
+  - punch-ins, snap zooms, shakes (§B);
+  - flashes, light leaks, whips, iris or shape wipes (§D, §A4);
+  - footage inside type, text behind the subject (§E).
+
+  The brief's Treatment lists each move it wants, with its shot and why. The director approves the list with the brief and sees each move on the preview. **Two or fewer per reel** is the guide: the references use almost none. A playbook's signature moves (creator-explainer's emphasis zooms, story-montage's chaos beat) are entries on that list, not automatic.
+- **No synthetic slow motion** from footage shot below 2× the sequence rate: no Timewarp, Optical Flow or frame blending. Use real time, a longer hold, or a clip shot at 50/60 fps. The one exception: the director picks it on a full-rate phone sample of that exact shot.
+- **Stabilise only what needs it.** First pick the steadier take or the steady part (`shake_report.py`, `motion_holds.py`). Warp only a shot that still fails the shake limits, and never one with an in-camera zoom or a whip.
+- **No crop-in on noisy footage.** On night shots, or any shot whose camera file measures noise ≥ 0.15 (`quality_probe.py <clip> --whole`):
+  - keep the base framing at ≥ 80 % of the camera width (§B);
+  - no punch-ins or snap zooms;
+  - for landscape footage, offer the 16:9 film frame first (§B option B).
+- **Nothing added to the texture:**
+  - no grain on footage that already shows noise (§A4);
+  - no sharpening or clarity, including the depth-clarity pass, unless the director picks it on a phone sample;
+  - no AI upscaling (Real-ESRGAN or similar).
+
+  Denoise only lightly, only where noise shows at phone size, and decide it once. Never add one more fix per round: Pujo's stacked corrections were called over-processed.
+- **Check it by numbers.** `scripts/quality_probe.py`, inside `pregate.py`, measures every shot's grain, motion, flicker and cadence against the references (`studio/reference-targets.json`):
+  - grain above 0.50 fails;
+  - grain above 0.30, motion above 4.3, a flicker pulse, or a repeat or jump inside a shot each get a full-rate strip for the reviewer.
+
+The sections below are the **menu** for the brief's effect list, not a checklist.
+
 ## A. Colour (three stages, always in this order)
 
 ### A0. The default: camera-true (v0.8)
@@ -18,7 +60,7 @@ The director judges every reel against what the camera recorded. Five reels say 
   - blacks crushed no more than the camera's own; whites never pulled below the camera unless they clip;
   - deliberate departures (a cast fix, blown highlights recovered) are named in the brief and passed to `--allow`.
 - **No creative look by default** (§A3), and no Hue vs Sat curve.
-- **No extra sharpening.** Light denoise only on shots whose noise shows at phone size (After Effects `denoise`, `after-effects.md`).
+- **No extra sharpening** (§0). Light denoise only on shots whose noise shows at phone size (After Effects `denoise`, `after-effects.md`), decided once, not added round by round.
 - **Texture is optional** (§A4): never grain on night phone footage; elsewhere ≤ 5 %, only if the brief has it.
 
 ### A1. Primary correction: per clip, on the clip itself
@@ -143,7 +185,8 @@ ffmpeg -i <clip> -an -filter_complex "format=gbrp,split[c][h];[h]colorlevels=rim
 Grain, dust, light leaks and film burns from `assets/overlays/` go on V4 in a blend mode:
 - `set_blend_mode` is broken, so set the mode by script with the enum: Overlay 19, Soft Light 23, Screen 22 (reality doc).
 - **Fade V4 texture together with V1 at every fade to or from black.** Grain in Overlay over black reads as a grey veil (frame luma 0.24 instead of about 0 in the pilot).
-- grain → Overlay or Soft Light, `set_clip_opacity`: **optional; none on night phone footage, ≤ 5 % otherwise (v0.8)**; more only if the director asks. The phone's 8-bit night footage already carries noise: the pilot's 40 % was "too much grain", and goddess's 10 % added to what the director called over-processed. Starter clip: `assets/overlays/gemini_film_grain_16mm.mp4`, a 4 s loop, so repeat it end to end across the reel.
+- grain → Overlay or Soft Light, `set_clip_opacity`: **optional, only from the brief (§0); none on footage that already shows noise, ≤ 5 % otherwise (v0.8, v0.12)**; more only if the director asks.
+  - "Already shows noise" means all night phone footage, and any clip at ≥ 0.15 on `quality_probe.py <clip> --whole`. Added grain on a noisy picture is what Instagram's basic encode turns into crawling blocks. The phone's 8-bit night footage already carries noise: the pilot's 40 % was "too much grain", and goddess's 10 % added to what the director called over-processed. Starter clip: `assets/overlays/gemini_film_grain_16mm.mp4`, a 4 s loop, so repeat it end to end across the reel.
 - light leaks → Screen, 40–80 %, on transitions or emotional beats
 - film burn / flash → Screen or Add, 3–8 frames, on hard cuts
 - **soft bloom / mist (whole reel, Premiere-native; verified on kolkata, 13 shots):** per V1 shot, an identical copy on V2 (same item, in-point, start, Motion values and keys; remove its linked audio) with one Lumetri that keeps only the highlights (Exposure −2, Contrast 100, Shadows −100, Blacks −100, plus the V1 clip's own primary), Gaussian Blur **Amount** 20 (reality doc), Opacity 30 %, blend Screen (22). Against the approved ffmpeg mist tile it measured luma +0.009–0.020, p98 +0.001–0.019, saturation −0.002…−0.03. The first try (Exposure −1, Contrast 60, Amount 40, 40 %) was 3–5× too strong: hazy, p02 doubled. The V3 look grades V1 and V2 together. After Effects `glow` (`after-effects.md`) stays for halation on point lights
@@ -162,14 +205,14 @@ Don't grade the reel or its export there.
 
 ## B. Motion on V1 (the talking head / hero shots)
 
-**Handheld footage:** no impact shake and no snap zoom. On top of real hand movement they read as jumps or shakes, which is how the director described them in the pilot. Put push/pull on the static holds from `motion.json` instead, and stabilise handheld moves (skill Phase 5).
+**Every move here is an entry on the brief's effect list (§0)**, except a gentle push on a steady hold. **Handheld footage:** no impact shake and no snap zoom. On top of real hand movement they read as jumps or shakes, which is how the director described them in the pilot. Put push/pull on the static holds from `motion.json` instead, and stabilise handheld moves (skill Phase 5).
 
 **Framing (v0.8 default): for vertical footage, show at least 80 % of the camera frame's width.** Every enlargement magnifies the phone's 8-bit night noise. Goddess v8 showed about 67 % and looked "horrible" next to the camera file, while Pujo's approved final showed 86 %.
 - For the director's vertical 4K clips (2160 wide) in the 1080 sequence: **Scale ≤ 62.5 %**. Width shown = 50 / Scale.
 - Pushes are gentle, about +6 points of Scale over the shot (e.g. 56 → 62), in the subject's direction.
-- Tighter only on a shot the brief names with its reason (a face, a detail), and never under 70 % of the width (Scale 71).
+- Tighter only on a shot the brief names with its reason (a face, a detail), and never under 70 % of the width (Scale 71). **Never tighter than 80 % on night or noisy footage** (§0): a 2× crop raises the noise about 1.3–1.4× and doubles the size of the phone's noise-reduction blotches (26 clips, 2026-11-15).
 - **Named moves** (a punch-in, a snap zoom, creator-explainer's emphasis zooms) may go tighter for their few frames. The floor applies to the shot's base framing; `camera_fidelity.py` samples mid-shot, so sample outside the move (`--at`) or list the shot in the brief's framing exceptions.
-- **Landscape sources can't reach 80 % in 9:16** (full-bleed keeps about 32 % of the width). Show the director the options on their own stills with the IG bands, and record the pick in the brief: **A** full-bleed (state the % of width kept), **B** a 16:9 film frame (100 %), or **C** a 4:5 window, 1080×1350 centred in the safe area (≈ 45 %; kolkata's choice, used for every shot). Landscape phone shots recorded with Blackmagic Cam's orientation lock on arrive tagged as portrait and lying on their side: confirm each clip's rotation in Phase 1 (skill) before framing.
+- **Landscape sources can't reach 80 % in 9:16** (full-bleed keeps about 32 % of the width). Show the director the options on their own stills with the IG bands, and record the pick in the brief. **Offer B first** (v0.12): it keeps the whole sensor, adds no noise, and is the shape of 23 of the 30 reels in the director's "Reel Concepts" collection. **A** full-bleed (state the % of width kept), **B** a 16:9 film frame (100 %), or **C** a 4:5 window, 1080×1350 centred in the safe area (≈ 45 %; kolkata's choice, used for every shot). Landscape phone shots recorded with Blackmagic Cam's orientation lock on arrive tagged as portrait and lying on their side: confirm each clip's rotation in Phase 1 (skill) before framing.
 - `camera_fidelity.py` reports the width shown per shot (WARN under 80 %, FAIL under 70 %).
 
 The Scale numbers in the table below assume 1080-wide footage; on 4K vertical clips, add the move to the framing scale (Slow push 56 → 62, not 100 → 106).
@@ -190,13 +233,15 @@ The Scale numbers in the table below assume 1080-wide footage; on 4K vertical cl
   2. sharpening (radius 1.2) and local contrast (radius 12) **only on the plane the camera focused on**, using the mask exp(−((d − d_focus) / 0.25 d_focus)²);
   3. the bokeh is left as it is.
 
-  On C047 it lifted near-plane detail 31 % (0.0101 → 0.0132) and the near/far separation from 1.69 to 2.36, with no change to the background. A depth map is what makes this work: an image-only focus mask couldn't separate the planes on night phone footage (in-focus edges scored only slightly above the bokeh, 1.27 against 1.17).
-  - Scratch tool: `projects/_hqtest/tools/depth_clarity.py`; `scripts/depth_clarity.py` is in the v0.12 backlog.
+  **Only when the director picks it on a phone sample (§0, v0.12):** it sharpens, and sharpening read as over-processed on Goddess. On C047 it lifted near-plane detail 31 % (0.0101 → 0.0132) and the near/far separation from 1.69 to 2.36, with no change to the background. A depth map is what makes this work: an image-only focus mask couldn't separate the planes on night phone footage (in-focus edges scored only slightly above the bokeh, 1.27 against 1.17).
+  - Scratch tool: `projects/_hqtest/tools/depth_clarity.py`; `scripts/depth_clarity.py` is in the v0.14 tools backlog.
   - Run it before Premiere, like denoise. The grade stays in Premiere.
 - **f/1.4 instead of f/2 gains little when the background is already well out of focus** (C047 separation 2.42 against 2.36). Sharpen the focus plane instead.
 - **Focus pulls** (`scripts/bin/cine_bake --rack`, between two screen regions or onto the recorded subject) **only when the director asks for one.** Diwali p1b's three pulls at f/1.4 read as "in and out focus" and were removed. Never add synthetic bokeh to non-Cinematic footage (director profile: Taste).
 
 ## C. Time
+
+**Every move in this table is an entry on the brief's effect list (§0); none is on by default.** Synthetic slow motion from footage below 2× the sequence rate needs the director's pick on a full-rate phone sample of that shot.
 
 | Move | Recipe | Notes |
 |---|---|---|
@@ -209,7 +254,7 @@ The Scale numbers in the table below assume 1080-wide footage; on 4K vertical cl
 
 ## D. Transitions (between shots)
 
-Default is a **hard cut**. Transitions are seasoning: at most 3–4 non-cut transitions per 30 s.
+Default is a **hard cut** (§0). A non-cut transition goes only where the brief places one: a section change, the ending, or an entry on the effect list. The director's saved references use almost none. Never more than 3–4 per 30 s.
 
 `add_transition` lands one cut off, so add transitions with the QE snippet in the reality doc and check each one's start/end. For fades to or from black, use **Dip to Black**: opacity keyframes didn't render on frame-rate-interpreted clips.
 | Move | Recipe |
