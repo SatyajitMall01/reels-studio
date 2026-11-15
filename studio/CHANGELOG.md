@@ -1,5 +1,44 @@
 # Studio Changelog
 
+## 0.12.1 — 2026-11-15
+**Night shots keep the camera's exposure; the black point takes near-black to black** (patch, safe mid-reel: a reel picks it up at its next grade round. Nothing already exported changes).
+
+**Why.** The director sent three references with "learn" (`studio/reviews/reference-study-2026-11-15-composition-and-graphics.md`). The night one keeps deep blacks around bright lights and reads clean, while our default grade brightened dark night shots. The director said "yes, test it".
+- **Test.** Three Goddess night shots, the same camera frames rendered three ways:
+  - A, the posted lift (+0.9 to +2.0 stops, Shadows up to +45, emulated);
+  - B, the camera as recorded;
+  - C, camera tones with near-black taken to black.
+
+  Each went through an export encode and an Instagram-like VP9 encode at 3 Mb/s, and was measured in the same flat dark areas.
+- **Results:**
+  - A raised dark-area grain ×1.08 / ×1.24 / ×3.4 and boil ×1.04 / ×1.42 / ×4.3 against the camera, more after the Instagram-like encode (boil up to ×4.9);
+  - C cut the boil ×0.2–0.6 where the shadows went black;
+  - A also turned C027's black sky muddy olive.
+- **The director picked C on the phone.**
+
+**What changed:**
+- **effects-playbook §A0 / §A1.** Night shots (camera mean below 0.25) aren't brightened:
+  - keep the camera's exposure;
+  - Blacks down until what the camera recorded near-black (< 0.07) goes black;
+  - Basic Saturation about 90, because a black point raises saturation (×1.09–1.21 measured; at 90, C027 and C044 match the camera);
+  - protect the lights.
+
+  A night shot too dark to read without a big lift is dropped or reshot, not lifted. Day shots keep the old rule: lift only until burn starts.
+- **`scripts/camera_fidelity.py`:**
+  - **luma:** a night shot lifted more than 0.03 over its camera WARNs ("a lift multiplies the grain"); darkening that near-black going black explains is allowed;
+  - **crushed:** FAILs only above what the camera recorded near-black, + 2 points. Before, it counted any pixel under 0.03 against the camera's own, which failed untouched camera frames on night shots (C027 21.5 → 25.8 %, C017 71.2 → 73.9 %);
+  - **saturation:** measured on camera tones above 0.15.
+  - Tested on the nine test renders:
+    - B (camera) PASSes on C027 and C044, and WARNs on C017 (saturation ×1.06);
+    - A WARNs as a lifted night shot (and FAILs on the emulation's burnt lights and hue);
+    - C with Saturation 90 PASSes on C027 and C044, and WARNs on C017 (saturation ×1.09).
+- **Docs:** reel-reviewer (night blacks are intended; a lifted night shot is checked for grain), GUIDE §A0 and the shooting tip, and the shooting guide ("expose so the subject reads": the edit won't brighten a night shot).
+- **Test tools:** `projects/_hqtest/tools/nightgrade_*.py`, results in `nightgrade_results_2026-11-15.json`.
+
+**Limits:**
+- A is an emulation of Lumetri, not a Premiere render.
+- The Blacks setting that gives a 3.5 % black point in Lumetri isn't measured yet. The first reel graded under this sets it by render, against `camera_fidelity`, and reports it.
+
 ## 0.12.0 — 2026-11-15
 **Restraint by default, a per-shot quality probe against the director's saved references, a shooting guide built on what the footage needs, and a post-upload check of what Instagram actually serves** (minor: reels in progress pick it up at their next round, CLAUDE.md §0.1).
 

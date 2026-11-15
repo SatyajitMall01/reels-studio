@@ -55,23 +55,32 @@ The sections below are the **menu** for the brief's effect list, not a checklist
 ### A0. The default: camera-true (v0.8)
 The director judges every reel against what the camera recorded. Five reels say the same thing: "over processed instead of looking HD" (goddess v6c), "why does everything look so over-processed" (Pujo v11). Pujo's posted final and goddess v10b were graded close to the camera and approved. So the default grade **corrects the camera's faults and stops there**:
 - **Each shot is judged against its own camera file at the same framing**, never against a fixed number. `scripts/camera_fidelity.py` measures it (skill Phase 4):
-  - brightness at or a little above the camera's. Lift dark night shots only until burn starts: any channel at 255 beyond the light sources on ≤ 2 % of the frame. Fixed targets (reel mean 0.40, no stretch under 0.30) burnt goddess v9c's night shots ("0:22 is burnt"); they're reported, never aimed at;
-  - saturation within ±5 % and midtone hue within ±3° of the camera;
-  - blacks crushed no more than the camera's own; whites never pulled below the camera unless they clip;
+  - **night shots (camera mean below 0.25) are not brightened** (v0.12.1, the director's pick on the night grade test, `studio/reviews/reference-study-2026-11-15-composition-and-graphics.md`):
+    - keep the camera's exposure;
+    - set the black point so what the camera recorded near-black (< 0.07) goes black (Lumetri Blacks down, by render; the test used a 3.5 % black point);
+    - trim Basic Saturation (about 90) until the colour matches the camera again, because a black point raises saturation;
+    - protect the lights (Highlights / Whites down if they clip).
+
+    Goddess lifted its night shots +0.6 to +2.0 stops, which multiplied dark-area grain ×1.1–3.4 and boil up to ×4.3, and Instagram's encode widened the gap. Taking near-black to black cut the boil ×0.2–0.6. A night shot too dark to read without a big lift (Goddess C017 recorded at 0.04) is dropped or reshot, and named in the brief, not lifted;
+  - day shots: brightness at or a little above the camera's, lifted only until burn starts (any channel at 255 beyond the light sources on ≤ 2 % of the frame). Fixed targets (reel mean 0.40, no stretch under 0.30) burnt goddess v9c's night shots ("0:22 is burnt"); they're reported, never aimed at;
+  - saturation within ±5 % and midtone hue within ±3° of the camera (saturation measured on camera tones above 0.15);
+  - blacks: only what the camera recorded near-black may go black, never shadow detail above it; whites never pulled below the camera unless they clip;
   - deliberate departures (a cast fix, blown highlights recovered) are named in the brief and passed to `--allow`.
 - **No creative look by default** (§A3), and no Hue vs Sat curve.
 - **No extra sharpening** (§0). Light denoise only on shots whose noise shows at phone size (After Effects `denoise`, `after-effects.md`), decided once, not added round by round.
 - **Texture is optional** (§A4): never grain on night phone footage; elsewhere ≤ 5 %, only if the brief has it.
 
 ### A1. Primary correction: per clip, on the clip itself
-Goal: neutral, correctly exposed footage with natural skin, as close to the camera file as its faults allow (§A0). Fix casts, blown or crushed areas and dark night exposure; don't restyle.
+Goal: neutral, correctly exposed footage with natural skin, as close to the camera file as its faults allow (§A0). Fix casts and blown or crushed areas; leave night exposure as recorded, with the black point set (§A0); don't restyle.
 - Read `analysis/summary.md` and look at each `contact.png` first.
 - Call `color_correct` **exactly once per clip**, with **only `contrast`, `temperature` and `tint`**. Every call adds a *new* Lumetri effect, and it can't be removed. It ignores brightness, highlights and shadows, and `saturation` turns the clip black and white.
 - Then set Exposure (stops), Highlights, Shadows and Basic Saturation (0–200, 100 = neutral) by ExtendScript on that same Lumetri, and keep Creative Saturation at 100. See the reality doc's Lumetri recipe.
 - Never call `color_correct` again on that clip. Note that `set_effect_property` hits only the first property with a given name.
 - The "brightness +N" starting points below were written for `color_correct`. Exposure is in stops and there's no verified conversion, so start small (about +0.3 to +0.5 stops), then adjust by render.
 - Starting points from the analyser:
-  - the analyser reads the clip as dark → a small lift (about +0.3 to +0.5 stops), shadows +10…+20, then check `camera_fidelity.py`: lift only until burn starts (§A0)
+  - the analyser reads the clip as dark:
+    - **at night**, no lift: Blacks down until the near-black areas go black, then Basic Saturation about 90 until the colour matches the camera (§A0). `camera_fidelity.py` WARNs a night shot lifted more than 0.03;
+    - **in daylight**, a small lift (about +0.3 to +0.5 stops), shadows +10…+20, until burn starts (§A0).
   - "flat / log-like" → contrast +20…+35, saturation +10…+20 (or the camera's log→Rec709 LUT, applied once as the clip's only Lumetri via `apply_lut`)
   - warm cast → temperature −10…−25; cool cast → temperature +10…+25
   - green tint → tint +5…+15 (toward magenta); magenta tint → tint −5…−15

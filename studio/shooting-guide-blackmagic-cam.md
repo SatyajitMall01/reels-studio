@@ -28,7 +28,7 @@ One page for the director, before a shoot. It's built from the 329 clips of the 
 
 ## Every new location
 1. **White balance: set it to the light and lock it.** Pandal and tungsten lamps: **3200 K**. Mixed LED street light: 4000–4500 K. Daylight: 5600 K. Unsure? Set it off a sheet of white paper. Never leave 5600 K under warm lamps.
-2. **Protect the highlights.** Expose so lamps, idols' faces and gold keep detail. A slightly dark night is fine; blown gold and crushed black can't be brought back in 8-bit.
+2. **Protect the highlights, and expose so the subject reads.** Expose so lamps, idols' faces and gold keep detail. A slightly dark night is fine: the edit keeps night shots at the camera's exposure and lets the deepest shadows go black. It won't brighten them, because brightening multiplied the grain up to 3× on Goddess. A shot too dark to read (Goddess C017, recorded at 4 % brightness) is lost, and blown gold can't be brought back in 8-bit.
 3. **LUT: for the monitor only.** Use it to judge the look, but don't burn it into the recording. If you do burn one in, **type its name in the clip's slate Notes** (or Project name). The ingest check reads it there; otherwise nobody can tell later.
 
 ## Every shot

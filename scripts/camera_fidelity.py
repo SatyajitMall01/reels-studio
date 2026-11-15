@@ -6,10 +6,14 @@ horrible"; "over processed instead of looking HD"). This finds, for one mid-fram
 framing the render shows (time ±--slack s, scale and offset by edge matching), rebuilds the camera image at that framing with
 no grade, and compares:
 
-  luma     render mean vs camera.          FAIL if more than 0.03 darker; WARN if lifted more than 0.10 (check for burn)
-  sat      saturation ratio render/camera. PASS within ±5 %, WARN within ±10 %, else FAIL
+  luma     render mean vs camera.          FAIL if more than 0.03 darker (plus what near-black taken to black explains);
+           WARN if lifted more than 0.10 (check for burn). A night shot (camera mean < 0.25) WARNs when lifted more than
+           0.03: the v0.12.1 night grade test found lifts multiply the grain (×1.1–3.4, more after Instagram's encode)
+  sat      saturation ratio render/camera, on camera tones above 0.15 (a black point recolours the toe by design).
+           PASS within ±5 %, WARN within ±10 %, else FAIL
   hue      midtone hue shift (when the camera's midtones carry colour). PASS ≤ 3°, WARN ≤ 6°, else FAIL
-  crushed  % pixels with luma < 0.03.      FAIL if more than 1 point above the camera's own
+  crushed  % pixels with luma < 0.03.      FAIL if more than 2 points above what the camera recorded near-black (< 0.07):
+           the deepest shadows may go black (the night rule), shadow detail above that may not
   clip255  % pixels with any channel at 255 (burn). FAIL above max(camera's own, 2 %)
   whites   p98 vs camera.                  WARN if pulled more than 0.03 below a camera that doesn't clip
   width    % of the widest framing the clip allows in 9:16 (its full width for vertical clips; ~32 % of a landscape
@@ -196,12 +200,19 @@ def refine(F: np.ndarray, S: np.ndarray, k: float, y0: int, x0: int):
 
 
 # ---------- measurements ----------
-def stats(x: np.ndarray, mask: np.ndarray) -> dict:
+NEAR_BLACK = 0.07     # camera luma below this may go to black in the grade (v0.12.1 night rule)
+NIGHT = 0.25          # a shot whose camera mean luma is below this is a night shot: not brightened (effects-playbook §A0)
+SAT_FLOOR = 0.15      # saturation is compared on camera tones above this: a black point changes the toe's colour, by design
+
+
+def stats(x: np.ndarray, mask: np.ndarray, visible: np.ndarray | None = None) -> dict:
+    """visible: the pixels the camera shows above SAT_FLOOR. Saturation is measured there, so shadows taken toward black
+    (allowed, the night rule) don't count as a colour change."""
     y = gray(x)
     ym = y[mask]
     mx, mn = x.max(-1), x.min(-1)
     sat = np.where(mx > 1e-3, (mx - mn) / np.maximum(mx, 1e-3), 0)
-    v = mask & (mx > 0.1)
+    v = (mask if visible is None else visible) & (mx > 0.1)
     mid = mask & (y > 0.2) & (y < 0.6)
     hue, chroma = None, 0.0
     if mid.sum() > 500:
@@ -219,6 +230,7 @@ def stats(x: np.ndarray, mask: np.ndarray) -> dict:
     return {"luma": round(float(ym.mean()), 3), "p02": round(float(np.percentile(ym, 2)), 3), "p98": round(float(np.percentile(ym, 98)), 3),
             "sat": round(float(sat[v].mean()) if v.any() else 0.0, 3), "hue": None if hue is None else round(float(hue), 1),
             "mid_chroma": round(chroma, 3), "crushed_%": round(float((ym < 0.03).mean() * 100), 2),
+            "near_black_%": round(float((ym < NEAR_BLACK).mean() * 100), 2),
             "clip255_%": round(float((mx[mask] >= 254.5 / 255).mean() * 100), 2), "detail": round(float(np.var(lap[mask]) * 1e4), 2)}
 
 
@@ -226,17 +238,28 @@ def judge(cam: dict, ren: dict, width: float, look: bool = False) -> list[tuple[
     """(level, check, detail) rows; level PASS/WARN/FAIL. look: a chosen creative look, so colour shifts are WARN."""
     rows = []
     blown = cam["clip255_%"] > 2.0      # the camera burnt highlights: pulling them back darkens the frame on purpose
+    night = cam["luma"] < NIGHT
     d = ren["luma"] - cam["luma"]
-    lv = ("WARN" if blown else "FAIL") if d < -0.03 else "WARN" if d > 0.10 else "PASS"
-    rows.append((lv, "luma", f"{ren['luma']:.3f} vs camera {cam['luma']:.3f} ({d:+.3f})" + (", camera highlights blown" if blown and d < -0.03 else "")))
+    dc = ren["crushed_%"] - cam["crushed_%"]
+    # near-black taken to black darkens the mean by at most NEAR_BLACK per pixel: that much darkening is allowed
+    dark_tol = 0.03 + max(0.0, dc) / 100 * NEAR_BLACK
+    if d < -dark_tol:
+        lv, why = ("WARN" if blown else "FAIL"), (", camera highlights blown" if blown else "")
+    elif night and d > 0.03:
+        lv, why = "WARN", ": a night shot brightened; a lift multiplies the grain, keep the camera's exposure (§A0)"
+    else:
+        lv, why = ("WARN" if d > 0.10 else "PASS"), ""
+    rows.append((lv, "luma", f"{ren['luma']:.3f} vs camera {cam['luma']:.3f} ({d:+.3f})" + why))
     r = ren["sat"] / max(cam["sat"], 1e-3)
     rows.append(("PASS" if abs(r - 1) <= 0.05 else "WARN" if abs(r - 1) <= 0.10 or look else "FAIL", "sat", f"{ren['sat']:.3f} vs {cam['sat']:.3f} (×{r:.2f})"))
     if cam["hue"] is not None and ren["hue"] is not None and cam["mid_chroma"] >= 0.03:
         dh = (ren["hue"] - cam["hue"] + 180) % 360 - 180
         hv = "PASS" if abs(dh) <= 3 else "WARN" if abs(dh) <= 6 or blown or look else "FAIL"
         rows.append((hv, "hue", f"{ren['hue']:.1f}° vs {cam['hue']:.1f}° ({dh:+.1f}°); a deliberate cast fix goes in --allow"))
-    dc = ren["crushed_%"] - cam["crushed_%"]
-    rows.append(("FAIL" if dc > 1.0 else "PASS", "crushed", f"{ren['crushed_%']:.1f} % vs {cam['crushed_%']:.1f} %"))
+    lim_c = max(cam["crushed_%"], cam["near_black_%"]) + 2.0     # only what the camera recorded near-black may go black (+2: grain at the edge)
+    rows.append(("FAIL" if ren["crushed_%"] > lim_c else "PASS", "crushed",
+                 f"{ren['crushed_%']:.1f} % vs camera {cam['crushed_%']:.1f} % (near-black {cam['near_black_%']:.1f} %, "
+                 f"limit {lim_c:.1f} %)"))
     lim = max(cam["clip255_%"], 2.0)
     rows.append(("FAIL" if ren["clip255_%"] > lim else "PASS", "clip255", f"{ren['clip255_%']:.2f} % (limit {lim:.2f} %)"))
     if cam["clip255_%"] < 1.0 and ren["p98"] < cam["p98"] - 0.03:
@@ -350,7 +373,8 @@ def main() -> None:
         ideal = resize(S, w, h)[y0:y0 + H_OUT, x0:x0 + W_OUT]
         width = 100 * W_OUT / w                                   # % of the camera's width shown
         width_max = 100 * W_OUT / (sw * max(W_OUT / sw, H_OUT / sh))   # the widest 9:16 framing (100 % for vertical clips)
-        cam, ren = stats(ideal, mask), stats(F, mask)
+        visible = mask & (gray(ideal) >= SAT_FLOOR)
+        cam, ren = stats(ideal, mask, visible), stats(F, mask, visible)
         rows = judge(cam, ren, 100 * width / width_max, a.look)
         if c < 0.35:
             rows.append(("FAIL", "match", f"weak match (NCC {c:.2f}): the comparison isn't reliable. Fix the map's clip, src_in "

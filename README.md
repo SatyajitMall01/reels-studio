@@ -23,7 +23,7 @@ It runs on **Claude Code** driving **Premiere Pro** through an MCP bridge, with 
 
 1. Clone and run the setup script (safe to re-run):
    ```bash
-   git clone https://github.com/SatyajitMall/reels-studio.git
+   git clone https://github.com/SatyajitMall01/reels-studio.git
    cd reels-studio
    bash setup.sh
    ```

@@ -104,6 +104,11 @@ Each item needs to be verified before it's adopted. The scripts it ships (`scrip
   - **verify `film-emulation-prompts`** on the first reel with an AI shot (draft numbers against its anchor, in a CR). A cheaper option, only with the director's OK for ≈ $0.24: two drafts of one prompt, with and without film-stock words, compared by `colour_report.py`.
 - After Effects `glow` op: add Glow Colors (A & B, red/orange), so CineStill halation can be done in AE instead of the ffmpeg bake.
 - Instagram plugin: needs the director's Graph API token via `instagram:configure`. Read-only use (insights, comments) recommended; posting only with approval per post.
+- **From the reference study 2026-11-15** (`studio/reviews/reference-study-2026-11-15-composition-and-graphics.md`), each for the director to pick:
+  - **Night grade test: done in v0.12.1.** The director picked C (camera exposure, near-black to black, saturation trimmed). Left over: the first reel graded under it reports the Lumetri Blacks value that gives the black point, and whether Premiere's Blacks raises saturation like the emulation.
+  - **"Composition chapters" device** for cinematic-montage: HyperFrames red line diagrams on V5, drawn on and faded out, with a black chapter card before each still 3 s shot. Our own design, not a copy of the trend's look.
+  - **Downscale measurement:** noise of a 16:9 frame inside 9:16 against a full-9:16 crop of the same landscape clip.
+  - **Split-screen explainer layout** (graphics top, face bottom) in the creator-explainer playbook.
 
 ## Known gaps
 - Music-montage runs on CLAUDE.md §4c rules, which haven't been tested in Premiere yet. The first pilot validates them.

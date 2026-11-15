@@ -147,7 +147,7 @@ For each finished reel the repository keeps its `brief.md`, `project.md` (the ru
 
 1. **Get the code.**
    ```bash
-   git clone https://github.com/SatyajitMall/reels-studio.git
+   git clone https://github.com/SatyajitMall01/reels-studio.git
    cd reels-studio
    ```
 2. **Run the setup script.** It's safe to re-run: each step skips itself if it's already done.
@@ -210,7 +210,7 @@ The one-page camera guide is `studio/shooting-guide-blackmagic-cam.md` (PDF: `do
 - **Low ISO, the main 26 mm lens at night, and a still camera.** Noise is the main reason reels look grainy, and every crop in the edit multiplies it. Frame each shot as it will be used, hold still or use a gimbal, and never zoom while recording.
 - **Shoot landscape for a horizontal-frame reel** (16:9 inside 9:16, the shape of most saved references).
 - **Lock white balance to the light**: 3200 K under tungsten and pandal lamps, 4000–4500 K under mixed LED, 5600 K in daylight.
-- **Protect the highlights.** A slightly dark night is fine; blown gold and crushed black can't be recovered in 8-bit.
+- **Protect the highlights, and expose so the subject reads.** A slightly dark night is fine; blown gold can't be recovered in 8-bit. The edit doesn't brighten night shots (it multiplies the grain), so a shot too dark to read is lost.
 - **A LUT on the monitor only.** If one is burned in, type its name in the clip's slate notes.
 - **Hold each shot 5–10 s, with one camera move.** The edit picks the best second and needs handles.
 - **Record 10 s of ambience** at every location.
@@ -398,7 +398,7 @@ Every reel uses the same tracks. The sequence is **1080×1920** at the footage's
 
 Colour runs in stages, always in this order. The full recipes are in `effects-playbook.md` §A.
 
-- **A0, the default: camera-true.** Each shot is corrected toward its own camera file, not toward fixed numbers: fix casts, blown or crushed areas and dark night exposure, then stop. `scripts/camera_fidelity.py` judges the result shot by shot against the camera frame.
+- **A0, the default: camera-true.** Each shot is corrected toward its own camera file, not toward fixed numbers: fix casts and blown or crushed areas, then stop. Night shots keep the camera's exposure: the black point takes near-black areas to black and saturation is trimmed back to the camera's colour. Brightening night footage multiplies the grain (v0.12.1). `scripts/camera_fidelity.py` judges the result shot by shot against the camera frame.
 - **A1, primary correction** on each clip. Premiere's `color_correct` tool is called exactly once per clip, for contrast, temperature and tint only. Exposure, highlights, shadows and saturation are then set by script on that same Lumetri, because the tool ignores them and its saturation setting turns the clip black and white.
 - **A2, shot matching** between neighbouring shots, within each shot's camera limits.
 - **A3, a creative look**, only if you picked one. It goes on an adjustment layer on V3, never on the clips. You create that layer with one manual click, because Premiere has no scripting API for adjustment layers. Looks with a built-in preset are applied by script; most film looks are picked from the Lumetri Look dropdown by you. `scripts/look_preview.py` shows the looks on your own stills before you choose.
